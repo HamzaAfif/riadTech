@@ -96,15 +96,36 @@ Route::post('/parent/assign-course', [StudentController::class, 'assignCourse'])
 
 use App\Http\Controllers\Student\StudentAuthController;
 use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Student\StudentCourseController;
 
-Route::prefix('student')->name('student.')->group(function () {
-    Route::get('login', [StudentAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [StudentAuthController::class, 'login'])->name('login.submit');
-    Route::post('logout', [StudentAuthController::class, 'logout'])->name('logout');
-    
+Route::prefix('student')
+    ->name('student.')
+    ->group(function () {
 
+        // Guest routes
+        Route::get('login', [StudentAuthController::class, 'showLoginForm'])->name('login');
+        Route::post('login', [StudentAuthController::class, 'login'])->name('login.submit');
+        Route::post('logout', [StudentAuthController::class, 'logout'])->name('logout');
 
-    Route::middleware('auth:student')->group(function () {
-        Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+        // Authenticated student routes
+        Route::middleware('auth:student')->group(function () {
+
+            // Dashboard
+            Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+
+            // Course overview / “start here”
+            Route::get('courses/{slug}/overview', [StudentCourseController::class, 'overview'])->name('courses.overview');
+
+            // Start or resume course
+            Route::get('courses/{slug}/start', [StudentCourseController::class, 'resumeOrStart'])->name('courses.start');
+
+            // Individual tasks/steps in course
+            Route::get('courses/{slug}/tasks/{step}', [StudentCourseController::class, 'showStep'])->name('courses.tasks.show');
+
+            // Complete tasks/steps
+            Route::post('courses/{slug}/tasks/{step}/complete', [StudentCourseController::class, 'completeStep'])->name('courses.tasks.complete');
+
+        });
+
     });
-});
+

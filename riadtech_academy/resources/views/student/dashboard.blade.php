@@ -15,19 +15,26 @@
     <p><strong>Email:</strong> {{ $student->email ?? 'N/A' }}</p>
     <p><strong>Birthday:</strong> {{ $student->birthdate ? \Carbon\Carbon::parse($student->birthday)->format('d/m/Y') : 'N/A' }}</p>
 
-    <h3>Enrolled Courses</h3>
+   <h3>Enrolled Courses</h3>
     @if($assignedCourses->count())
         <ul>
             @foreach($assignedCourses as $assignment)
                 <li>
-                    {{ $assignment->course->title }} — 
-                    <strong>Status:</strong> {{ ucfirst($assignment->status) }} | 
-                    <strong>Progress Step:</strong> {{ $assignment->progress }}
+                    {{ $assignment->course->title }} —
+                    <strong>Status:</strong> {{ ucfirst($assignment->status) }} |
+                    <strong>Progress:</strong> Step {{ $assignment->progress }}
+
+                    <br>
+                    <a href="{{ route('student.courses.start', ['slug' => $assignment->course->slug]) }}">
+                        🚀 Start Course
+                    </a>
+
                 </li>
             @endforeach
         </ul>
     @else
         <p>You have not been assigned any courses yet.</p>
     @endif
+
 </body>
 </html>
