@@ -48,6 +48,14 @@ return [
             'driver' => 'session',
             'provider' => 'teachers',
         ],
+        'student_parent' => [
+            'driver' => 'session',
+            'provider' => 'student_parents',
+        ],
+        'student' => [
+            'driver' => 'session',
+            'provider' => 'students',
+        ],
 
     ],
 
@@ -81,7 +89,15 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Teacher::class,
         ],
+        'student_parents' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\StudentParent::class,
+        ],
 
+        'students' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Student::class,
+        ],
 
 
         // 'users' => [

@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Teacher\AuthController as TeacherAuthController;
+use App\Http\Controllers\Admin\TeacherController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,30 +17,35 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-
+use App\Http\Controllers\Admin\ParentController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
+    // Auth routes
     Route::get('/login', [\App\Http\Controllers\Admin\AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [\App\Http\Controllers\Admin\AuthController::class, 'login'])->name('login.submit');
     Route::post('/logout', [\App\Http\Controllers\Admin\AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])
-        ->middleware('auth:admin')
-        ->name('dashboard');
+    // Protected admin routes
+    Route::middleware('auth:admin')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/parents', [ParentController::class, 'index'])->name('parents'); // Fixed this line
+        Route::resource('teachers', TeacherController::class);
+    });
 });
 
-use App\Http\Controllers\Admin\TeacherController;
 
-Route::prefix('admin')->middleware('auth:admin')->group(function () {
-    Route::get('teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');       // List teachers
-    Route::get('teachers/create', [TeacherController::class, 'create'])->name('admin.teachers.create'); // Show form to create teacher
-    Route::post('teachers', [TeacherController::class, 'store'])->name('admin.teachers.store');        // Save new teacher
-    Route::get('teachers/{teacher}/edit', [TeacherController::class, 'edit'])->name('admin.teachers.edit'); // Show form to edit teacher
-    Route::put('teachers/{teacher}', [TeacherController::class, 'update'])->name('admin.teachers.update'); // Update teacher
-    Route::delete('teachers/{teacher}', [TeacherController::class, 'destroy'])->name('admin.teachers.destroy'); // Delete teacher
+
+
+
+
+
+
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('teachers', TeacherController::class);
+    Route::get('/admin/parents', [ParentController::class, 'index'])->name('admin.parents');
 });
 
-use App\Http\Controllers\Teacher\AuthController as TeacherAuthController;
+
 
 // Login and logout
 Route::prefix('teacher')->group(function () {
@@ -52,5 +58,53 @@ Route::prefix('teacher')->group(function () {
         Route::get('/dashboard', function () {
             return view('teacher.dashboard');
         })->name('teacher.dashboard');
+    });
+});
+
+use App\Http\Controllers\StudentParent\Auth\StudentParentAuthController;
+use App\Http\Controllers\StudentParent\DashboardController;
+use App\Http\Controllers\StudentParent\StudentController;
+
+Route::prefix('parent')->name('student_parent.')->group(function () {
+
+    // Guest routes
+    Route::get('/login', [StudentParentAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [StudentParentAuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [StudentParentAuthController::class, 'logout'])->name('logout');
+    Route::get('/register', [StudentParentAuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [StudentParentAuthController::class, 'register'])->name('register.submit');
+
+    // Protected parent routes
+    Route::middleware('auth:student_parent')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Student creation by parent
+        Route::post('/students/{student}/generate-password', [StudentController::class, 'generatePassword'])->name('students.generate_password');
+        Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
+        Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+        
+
+    });
+});
+
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('courses', \App\Http\Controllers\Admin\CourseController::class);
+
+});
+Route::post('/parent/assign-course', [StudentController::class, 'assignCourse'])->name('student_parent.assign_course');
+
+
+use App\Http\Controllers\Student\StudentAuthController;
+use App\Http\Controllers\Student\StudentDashboardController;
+
+Route::prefix('student')->name('student.')->group(function () {
+    Route::get('login', [StudentAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [StudentAuthController::class, 'login'])->name('login.submit');
+    Route::post('logout', [StudentAuthController::class, 'logout'])->name('logout');
+    
+
+
+    Route::middleware('auth:student')->group(function () {
+        Route::get('dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
     });
 });
